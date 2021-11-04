@@ -5,7 +5,7 @@ BLOCK_SZ = 16
 def split_ciphertext_in_blocks(ciphertext: bytes) -> list[bytes]:
     ciphertext_sz = len(ciphertext)
     assert ciphertext_sz % BLOCK_SZ == 0
-    
+
     return [ciphertext[i : i + BLOCK_SZ] for i in range(0, ciphertext_sz, 16)]
 
 
@@ -45,6 +45,10 @@ def decrypt_block(prev: bytes, block: bytes, key: int) -> bytes:
     return unmerged
 
 
+def unpad(text: bytes) -> bytes:
+    return text[: -text[-1]]
+
+
 def decrypt_text(ciphertext: bytes, iv: bytes, key: int) -> bytes:
     ciphertext_blocks = split_ciphertext_in_blocks(ciphertext)
     blocks_cnt = len(ciphertext_blocks)
@@ -56,7 +60,8 @@ def decrypt_text(ciphertext: bytes, iv: bytes, key: int) -> bytes:
         new_block = decrypt_block(prev_block, cur_block, key)
         plaintext_blocks.append(new_block)
 
-    return b"".join(plaintext_blocks)
+    joined = b"".join(plaintext_blocks)
+    return unpad(joined)
 
 
 if __name__ == "__main__":
