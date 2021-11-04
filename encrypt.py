@@ -1,24 +1,13 @@
 # rot + shift + cbc
 
-from string import ascii_letters, digits, punctuation
-
-ALPHABET = bytes(ascii_letters + digits + punctuation, encoding="utf-8")
-ALPHABET_SZ = len(ALPHABET)
+ALPHABET_SZ = 256
 BLOCK_SZ = 16
 
 
-def get_ind(char: int) -> int:
-    return ALPHABET.find(char)
-
-
 def rotate_char(char: int, key: int) -> int:
-    ind = get_ind(char)
-
-    if ind == -1:
-        return char
-
+    ind = char
     new_ind = (ind + key) % ALPHABET_SZ
-    new_char = ALPHABET[new_ind]
+    new_char = new_ind
 
     return new_char
 
@@ -40,15 +29,14 @@ def encrypt_one_block(block: bytes, key: int) -> bytes:
     return encrypted_block
 
 
-# strange pkcs 7 version
-def pad(text: str) -> str:
+def pad(text: bytes) -> bytes:
     remainds = BLOCK_SZ - (len(text) % BLOCK_SZ)
     ind_remainds = remainds % ALPHABET_SZ
-    return text + text[ind_remainds] * remainds
+    return text + bytes([ind_remainds] * remainds)
 
 
-def split_text_in_blocks(text: str) -> list[bytes]:
-    padded_text = bytes(pad(text), encoding="utf-8")
+def split_text_in_blocks(text: bytes) -> list[bytes]:
+    padded_text = pad(text)
     text_sz = len(padded_text)
     return [padded_text[i : i + BLOCK_SZ] for i in range(0, text_sz, 16)]
 
@@ -63,11 +51,7 @@ def merge_blocks(block1: bytes, block2: bytes) -> bytes:
     return res
 
 
-def prettify(encrypted: list[list[str]]) -> str:
-    return "".join(["".join([chr(char) for char in block]) for block in encrypted])
-
-
-def encrypt_text(text: str, key: int, iv: bytes) -> bytes:
+def encrypt_text(text: bytes, key: int, iv: bytes) -> bytes:
     assert isinstance(iv, bytes) and len(iv) == BLOCK_SZ
 
     splitted_text = split_text_in_blocks(text)
@@ -90,7 +74,7 @@ def encrypt_text(text: str, key: int, iv: bytes) -> bytes:
 
 
 if __name__ == "__main__":
-    text = """ROT13 ("rotate by 13 places", sometimes hyphenated ROT-13) is a simple letter substitution cipher that replaces a letter with the 13th letter after it in the alphabet. ROT13 is a special case of the Caesar cipher which was developed in ancient Rome."""
+    text = b'ROT13 ("rotate by 13 places", sometimes hyphenated ROT-13) is a simple letter substitution cipher that replaces a letter with the 13th letter after it in the alphabet. ROT13 is a special case of the Caesar cipher which was developed in ancient Rome.'
     key = 13
     iv = b"0123456789ABCDEF"
     print(encrypt_text(text, key, iv))
